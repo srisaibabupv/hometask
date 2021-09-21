@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 public class SparkUtils {
     public static SparkSession createSparkSession(){
         SparkSession sparkSession = SparkSession.builder()
-                .appName("JsonDirectoryStreaming")
+                .appName("JsonProcessing")
                 .master("local")
                 .getOrCreate();
         sparkSession.sparkContext().setLogLevel("ERROR");

@@ -45,19 +45,16 @@ public class DataService {
         return dataSetQ2.collectAsList();
     }
 
-    public List<TradeBean> generateQ3Response(){
-        List<TradeBean> tradeBeanData = new ArrayList<>();
+    public List<NotionalValuePrice> generateQ3Response(){
         List<Symbol> inputData = generateQ1Response();
+        List<NotionalValuePrice> dataSetLstQ3 = new ArrayList<>();
         inputData.forEach(symbol -> {
-            Dataset<TradeBean> dataSetQ3 = getSession().createDataset(getSymbolData(symbol), Encoders.bean(TradeBean.class));
-            dataSetQ3.select(col("price"), col("quantity"))
-                    .withColumn("NotionalValue", col("price").multiply(col("quantity")))
-                    .orderBy(col("NotionalValue").desc())
-                    .limit(200)
-                    .show();
-            tradeBeanData.add(dataSetQ3.collectAsList().get(0));
+            Dataset<NotionalValuePrice> dataSetQ2 = getSession().createDataset(getSymbolData(symbol), Encoders.bean(NotionalValuePrice.class));
+            dataSetQ2 = dataSetQ2.orderBy(col("bidPrice").desc(), col("askPrice").desc())
+                     .limit(10);
+            dataSetLstQ3.addAll(dataSetQ2.collectAsList());
         });
-        return tradeBeanData;
+        return dataSetLstQ3;
     }
 
     public List<Symbol> getData(){
@@ -95,7 +92,7 @@ public class DataService {
         return SparkUtils.createSparkSession();
     }
 
-    public static List<TradeBean> getSymbolData(Symbol symbol){
+    public static List<NotionalValuePrice> getSymbolData(Symbol symbol){
         System.out.println("----------------------------Symbol : "+symbol.getSymbol()+"------------------------------------");
         String url = "https://api.binance.com/api/v3/depth?symbol="+symbol.getSymbol()+"&limit=5000";
         RestTemplate restTemplate = new RestTemplate();
@@ -120,14 +117,41 @@ public class DataService {
         NotionalValue notionalValue = new NotionalValue();
         notionalValue.setName(symbol.getSymbol());
         notionalValue.setBids(new ArrayList<>());
+        notionalValue.setAsks(new ArrayList<>());
         try {
             symbolNotionalValue = objectMapper.reader().forType(new TypeReference<SymbolNotionalValue>(){}).readValue(response.getBody());
             Arrays.stream(symbolNotionalValue.getBids()).forEach((i) -> {
                 notionalValue.getBids().add(new TradeBean(Double.parseDouble(i[0].getValue()), Double.parseDouble(i[1].getValue())));
             });
+            Arrays.stream(symbolNotionalValue.getAsks()).forEach((i) -> {
+                notionalValue.getAsks().add(new TradeBean(Double.parseDouble(i[0].getValue()), Double.parseDouble(i[1].getValue())));
+            });
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return notionalValue.getBids();
+        return generateNotionalPrice(notionalValue);
+    }
+
+    private static List<NotionalValuePrice> generateNotionalPrice(NotionalValue notionalValue) {
+        List<NotionalValuePrice> notionalValuePriceList = new ArrayList<>();
+        int counter = Math.max(notionalValue.getBids().size(), notionalValue.getAsks().size());
+        Double bidPrice, askPrice = 0.0;
+        for(int i = 0; i < counter; i++){
+            if(i < notionalValue.getBids().size())
+                bidPrice = notionalValue.getBids().get(i).getNotionalValue();
+            else
+                bidPrice = 0.0;
+            if(i < notionalValue.getAsks().size())
+                askPrice = notionalValue.getAsks().get(i).getNotionalValue();
+            else
+                askPrice = 0.0;
+            notionalValuePriceList.add(
+                    new NotionalValuePrice(
+                            notionalValue.getName(),
+                            bidPrice,
+                            askPrice
+                    ));
+        }
+        return notionalValuePriceList;
     }
 }

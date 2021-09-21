@@ -6,6 +6,7 @@ import java.util.List;
 public class NotionalValue implements Serializable {
     private String name;
     private List<TradeBean> bids;
+    private List<TradeBean> asks;
 
     public String getName() {
         return name;
@@ -21,5 +22,13 @@ public class NotionalValue implements Serializable {
 
     public void setBids(List<TradeBean> bids) {
         this.bids = bids;
+    }
+
+    public List<TradeBean> getAsks() {
+        return asks;
+    }
+
+    public void setAsks(List<TradeBean> asks) {
+        this.asks = asks;
     }
 }

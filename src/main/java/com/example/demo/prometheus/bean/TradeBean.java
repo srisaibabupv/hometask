@@ -3,6 +3,7 @@ package com.example.demo.prometheus.bean;
 public class TradeBean {
     private Double price;
     private Double quantity;
+    private Double notionalValue;
 
     public TradeBean() {
     }
@@ -10,6 +11,7 @@ public class TradeBean {
     public TradeBean(Double price, Double quantity) {
         this.price = price;
         this.quantity = quantity;
+        this.notionalValue = price * quantity;
     }
 
     public Double getPrice() {
@@ -26,5 +28,13 @@ public class TradeBean {
 
     public void setQuantity(Double quantity) {
         this.quantity = quantity;
+    }
+
+    public Double getNotionalValue() {
+        return notionalValue;
+    }
+
+    public void setNotionalValue(Double notionalValue) {
+        this.notionalValue = notionalValue;
     }
 }

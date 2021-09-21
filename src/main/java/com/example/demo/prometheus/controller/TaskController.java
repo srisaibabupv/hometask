@@ -1,5 +1,6 @@
 package com.example.demo.prometheus.controller;
 
+import com.example.demo.prometheus.bean.NotionalValuePrice;
 import com.example.demo.prometheus.bean.Symbol;
 import com.example.demo.prometheus.service.DataService;
 import com.example.demo.prometheus.service.PriceSpreadService;
@@ -33,9 +34,8 @@ public class TaskController {
 
     @GetMapping("Q3")
     @ResponseBody
-    public String Q3(){
-        service.generateQ3Response();
-        return "Response is huge please check console!";
+    public List<NotionalValuePrice> Q3(){
+        return service.generateQ3Response();
     }
 
     @GetMapping("Q4")
